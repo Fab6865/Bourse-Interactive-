@@ -1,0 +1,693 @@
+<html><head><base href="https://stockgame.example.com">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeu de Bourse Interactive avec Robot Trader et Entreprises</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #808080;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #game-container {
+    background-color: rgb(24, 241, 97);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    max-width: 1200px;
+    width: 100%;
+  }
+  h1, h2, h3 {
+    color: #333;
+    text-align: center;
+  }
+  #logo {
+    display: block;
+    margin: 0 auto 20px;
+    max-width: 100%;
+    height: auto;
+  }
+  #stock-list, #company-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-bottom: 20px;
+  }
+  .stock-card, .company-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px;
+    width: 220px;
+    text-align: center;
+  }
+  .stock-name, .company-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  .stock-price, .company-price {
+    color: #007bff;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  .stock-change {
+    font-size: 0.9em;
+  }
+  .stock-trend {
+    font-size: 0.9em;
+    margin-top: 5px;
+  }
+  .positive {
+    color: green;
+  }
+  .negative {
+    color: red;
+  }
+  button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+  button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  #portfolio, #companies {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+  }
+  #cash {
+    font-weight: bold;
+    color: #28a745;
+  }
+  .trade-input {
+    margin-top: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .trade-input input {
+    width: 60px;
+    margin-right: 5px;
+    padding: 3px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  #holdings, #owned-companies {
+    list-style-type: none;
+    padding: 0;
+  }
+  #holdings li, #owned-companies li {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    padding: 10px;
+  }
+  .investment-info {
+    font-size: 0.9em;
+    color: #6c757d;
+  }
+  #save-status {
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+    color: #28a745;
+  }
+  #market-mood {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+  }
+  .bull {
+    color: #28a745;
+  }
+  .bear {
+    color: #dc3545;
+  }
+  .neutral {
+    color: #6c757d;
+  }
+  #shop, #luxury-shop {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+  }
+  #booster-timer, #robot-trader-timer {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 1.1em;
+  }
+  #luxury-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+  .luxury-item {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px;
+    width: 200px;
+    text-align: center;
+  }
+  .luxury-item img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+  }
+  .luxury-price {
+    font-weight: bold;
+    color: #dc3545;
+  }
+  #daily-bonus {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div id="game-container">
+    <img id="logo" src="https://www.investman.fr/wp-content/uploads/2020/10/5f8e758fe74ca-720x405.jpeg" alt="Logo du jeu de bourse" width="720" height="405">
+    <h1>Jeu de Bourse Interactive avec Robot Trader et Entreprises</h1>
+    <div id="market-mood"></div>
+    <div id="stock-list"></div>
+    <div id="portfolio">
+      <h2>Votre Portefeuille</h2>
+      <p>Solde en espèces: <span id="cash">100000</span> €</p>
+      <ul id="holdings"></ul>
+    </div>
+    <div id="companies">
+      <h2>Entreprises à Acheter</h2>
+      <div id="company-list"></div>
+    </div>
+    <div id="owned-companies-container">
+      <h2>Vos Entreprises</h2>
+      <ul id="owned-companies"></ul>
+    </div>
+    <div id="daily-bonus">
+      <h3>Don Journalier</h3>
+      <p>Revenez chaque jour pour recevoir 500 € gratuits!</p>
+      <button id="claim-bonus" onclick="claimDailyBonus()">Réclamer le don</button>
+    </div>
+    <div id="shop">
+      <h2>Boutique de Boosters</h2>
+      <button onclick="buyBooster('bear')">Acheter Booster Baissier (1000 €)</button>
+      <button onclick="buyBooster('bull')">Acheter Booster Haussier (1000 €)</button>
+      <button onclick="buyRobotTrader()">Acheter Robot Trader (1000€)</button>
+    </div>
+    <div id="booster-timer"></div>
+    <div id="robot-trader-timer"></div>
+    <div id="luxury-shop">
+      <h2>Boutique de Luxe Premium</h2>
+      <div id="luxury-items"></div>
+    </div>
+    <div id="save-status"></div>
+  </div>
+
+  <script>
+    const stocks = [
+      { name: "TechCorp", price: 150, change: 0, volatility: 1.2, trend: 0, trendStartTime: Date.now() },
+      { name: "EcoEnergy", price: 75, change: 0, volatility: 0.8, trend: 0, trendStartTime: Date.now() },
+      { name: "MegaRetail", price: 200, change: 0, volatility: 1.0, trend: 0, trendStartTime: Date.now() },
+      { name: "HealthInno", price: 100, change: 0, volatility: 1.1, trend: 0, trendStartTime: Date.now() },
+      { name: "GlobalFinance", price: 180, change: 0, volatility: 1.3, trend: 0, trendStartTime: Date.now() },
+      { name: "SpaceX", price: 300, change: 0, volatility: 1.5, trend: 0, trendStartTime: Date.now() }
+    ];
+
+    const luxuryItems = [
+      { name: "Montre en or", price: 500000, img: "https://images.bfmtv.com/jd4AlCKL_XkQilAiNKBZRkoBssA=/0x0:1600x900/640x0/images/Cette-montre-de-luxe-pour-homme-a-prix-avantageux-fait-l-unanimite-aupres-des-connaisseurs-1681665.jpg" },
+      { name: "Voiture de sport", price: 2000000, img: "https://as1.ftcdn.net/v2/jpg/06/17/27/38/1000_F_617273865_VcxGBk6XR3nxkorfQpLMkZgsboSBf7ol.jpg" },
+      { name: "Yacht privé", price: 5000000, img: "https://maville.com/photosmvi/2015/07/02/P1D2793883G.jpg" },
+      { name: "Jet privé", price: 10000000, img: "https://miro.medium.com/v2/resize:fit:1108/1*6N2_gKyhWtKZD8w_lP-uvA.png" },
+      { name: "Île privée", price: 50000000, img: "https://i.f1g.fr/media/eidos/805x536_crop/2021/02/22/XVM91a9c2f2-72be-11eb-9cd8-6362fedf2004-805x536.jpg" }
+    ];
+
+    const companies = [
+      { name: "Startup Tech", price: 50000, employees: 10, revenue: 1000 },
+      { name: "Green Energy Co.", price: 100000, employees: 25, revenue: 2500 },
+      { name: "Local Retail Chain", price: 75000, employees: 50, revenue: 5000 },
+      { name: "Health Tech Innovators", price: 150000, employees: 30, revenue: 3000 },
+      { name: "Global Logistics Ltd.", price: 200000, employees: 100, revenue: 10000 }
+    ];
+
+    let cash = 100000;
+    let portfolio = {};
+    let ownedCompanies = [];
+    let marketMood = 0;
+    let activeBooster = null;
+    let boosterEndTime = null;
+    let ownedLuxuryItems = [];
+    let lastDailyBonusDate = null;
+    let robotTraderActive = false;
+    let robotTraderEndTime = null;
+
+    function loadGame() {
+      const savedGame = localStorage.getItem('stockGame');
+      if (savedGame) {
+        const gameState = JSON.parse(savedGame);
+        cash = gameState.cash;
+        portfolio = gameState.portfolio;
+        ownedCompanies = gameState.ownedCompanies || [];
+        marketMood = gameState.marketMood;
+        activeBooster = gameState.activeBooster;
+        boosterEndTime = gameState.boosterEndTime;
+        ownedLuxuryItems = gameState.ownedLuxuryItems || [];
+        lastDailyBonusDate = gameState.lastDailyBonusDate ? new Date(gameState.lastDailyBonusDate) : null;
+        robotTraderActive = gameState.robotTraderActive || false;
+        robotTraderEndTime = gameState.robotTraderEndTime;
+        stocks.forEach((stock, index) => {
+          if (gameState.stocks[index]) {
+            stock.price = gameState.stocks[index].price;
+            stock.change = gameState.stocks[index].change;
+            stock.trend = gameState.stocks[index].trend;
+            stock.trendStartTime = gameState.stocks[index].trendStartTime;
+          }
+        });
+      }
+      updateDailyBonusButton();
+    }
+
+    function saveGame() {
+      const gameState = {
+        cash,
+        portfolio,
+        ownedCompanies,
+        stocks: stocks.map(stock => ({
+          price: stock.price,
+          change: stock.change,
+          trend: stock.trend,
+          trendStartTime: stock.trendStartTime
+        })),
+        marketMood,
+        activeBooster,
+        boosterEndTime,
+        ownedLuxuryItems,
+        lastDailyBonusDate,
+        robotTraderActive,
+        robotTraderEndTime
+      };
+      localStorage.setItem('stockGame', JSON.stringify(gameState));
+      showSaveStatus();
+    }
+
+    function showSaveStatus() {
+      const saveStatus = document.getElementById('save-status');
+      saveStatus.textContent = 'Partie sauvegardée';
+      setTimeout(() => {
+        saveStatus.textContent = '';
+      }, 2000);
+    }
+
+    function updateMarketMood() {
+      const randomFactor = Math.random();
+      if (randomFactor < 0.1) {
+        marketMood = -1; // Bear market
+      } else if (randomFactor > 0.9) {
+        marketMood = 1; // Bull market
+      } else {
+        marketMood = 0; // Neutral market
+      }
+      
+      const moodElement = document.getElementById('market-mood');
+      if (marketMood === -1) {
+        moodElement.textContent = "Marché baissier (Bear Market)";
+        moodElement.className = "bear";
+      } else if (marketMood === 1) {
+        moodElement.textContent = "Marché haussier (Bull Market)";
+        moodElement.className = "bull";
+      } else {
+        moodElement.textContent = "Marché neutre";
+        moodElement.className = "neutral";
+      }
+    }
+
+    function updateStockPrices() {
+      updateMarketMood();
+      stocks.forEach(stock => {
+        let baseChange = (Math.random() - 0.5) * 2;
+        let moodEffect = marketMood * stock.volatility * 0.5;
+        
+        if (activeBooster === 'bear') {
+          baseChange -= 0.5;
+          moodEffect -= 0.5;
+        } else if (activeBooster === 'bull') {
+          baseChange += 0.5;
+          moodEffect += 0.5;
+        }
+        
+        const totalChange = baseChange + moodEffect;
+        stock.price = Math.max(0.01, Math.min(1000, stock.price + totalChange));
+        stock.change = totalChange;
+
+        const now = Date.now();
+        if (now - stock.trendStartTime > 600000) { // 10 minutes
+          stock.trend = Math.random() > 0.5 ? 1 : -1;
+          stock.trendStartTime = now;
+        }
+      });
+      renderStocks();
+      renderPortfolio();
+      updateCompanies();
+      updateBoosterTimer();
+      updateRobotTraderTimer();
+      saveGame();
+    }
+
+    function renderStocks() {
+      const stockList = document.getElementById('stock-list');
+      stockList.innerHTML = '';
+      stocks.forEach(stock => {
+        const stockCard = document.createElement('div');
+        stockCard.className = 'stock-card';
+        stockCard.innerHTML = `
+          <div class="stock-name">${stock.name}</div>
+          <div class="stock-price">${stock.price.toFixed(2)} €</div>
+          <div class="stock-change ${stock.change >= 0 ? 'positive' : 'negative'}">
+            ${stock.change >= 0 ? '▲' : '▼'} ${Math.abs(stock.change).toFixed(2)} €
+          </div>
+          <div class="stock-trend ${stock.trend > 0 ? 'positive' : stock.trend < 0 ? 'negative' : ''}">
+            Tendance: ${stock.trend > 0 ? '↗️ Hausse' : stock.trend < 0 ? '↘️ Baisse' : '➡️ Stable'}
+          </div>
+          <div class="trade-input">
+            <input type="number" id="buy-${stock.name}" min="1" value="1">
+            <button onclick="buyStock('${stock.name}')">Acheter</button>
+          </div>
+          <div class="trade-input">
+            <input type="number" id="sell-${stock.name}" min="1" value="1">
+            <button onclick="sellStock('${stock.name}')">Vendre</button>
+          </div>
+        `;
+        stockList.appendChild(stockCard);
+      });
+    }
+
+    function renderPortfolio() {
+      const holdingsList = document.getElementById('holdings');
+      holdingsList.innerHTML = '';
+      for (const [stockName, holding] of Object.entries(portfolio)) {
+        if (holding.quantity > 0) {
+          const li = document.createElement('li');
+          const currentStock = stocks.find(s => s.name === stockName);
+          const currentValue = currentStock.price * holding.quantity;
+          const profitLoss = currentValue - holding.investment;
+          li.innerHTML = `
+            <strong>${stockName}</strong>: ${holding.quantity} actions
+            <br>
+            <span class="investment-info">
+              Investi: ${holding.investment.toFixed(2)} € au prix de ${holding.avgPrice.toFixed(2)} €
+              <br>
+              Valeur actuelle: ${currentValue.toFixed(2)} €
+              <br>
+              Profit/Perte: <span class="${profitLoss >= 0 ? 'positive' : 'negative'}">
+                ${profitLoss.toFixed(2)} €
+              </span>
+            </span>
+          `;
+          holdingsList.appendChild(li);
+        }
+      }
+      document.getElementById('cash').textContent = cash.toFixed(2);
+    }
+
+    function buyStock(stockName) {
+      const stock = stocks.find(s => s.name === stockName);
+      const quantity = parseInt(document.getElementById(`buy-${stockName}`).value);
+      const totalCost = stock.price * quantity;
+      
+      if (stock && cash >= totalCost) {
+        cash -= totalCost;
+        if (!portfolio[stockName]) {
+          portfolio[stockName] = { quantity: 0, investment: 0, avgPrice: 0 };
+        }
+        const holding = portfolio[stockName];
+        holding.quantity += quantity;
+        holding.investment += totalCost;
+        holding.avgPrice = holding.investment / holding.quantity;
+        renderPortfolio();
+        saveGame();
+      } else {
+        alert("Fonds insuffisants pour acheter ces actions !");
+      }
+    }
+
+    function sellStock(stockName) {
+      const stock = stocks.find(s => s.name === stockName);
+      const quantity = parseInt(document.getElementById(`sell-${stockName}`).value);
+      
+      if (stock && portfolio[stockName] && portfolio[stockName].quantity >= quantity) {
+        const saleValue = stock.price * quantity;
+        cash += saleValue;
+        const holding = portfolio[stockName];
+        const soldRatio = quantity / holding.quantity;
+        holding.quantity -= quantity;
+        holding.investment -= holding.investment * soldRatio;
+        if (holding.quantity > 0) {
+          holding.avgPrice = holding.investment / holding.quantity;
+        } else {
+          delete portfolio[stockName];
+        }
+        renderPortfolio();
+        saveGame();
+      } else {
+        alert("Vous ne possédez pas assez d'actions à vendre !");
+      }
+    }
+
+    function buyBooster(type) {
+      if (cash >= 1000) {
+        cash -= 1000;
+        activeBooster = type;
+        boosterEndTime = Date.now() + 300000; // 5 minutes
+        renderPortfolio();
+        updateBoosterTimer();
+        saveGame();
+      } else {
+        alert("Fonds insuffisants pour acheter ce booster !");
+      }
+    }
+
+    function updateBoosterTimer() {
+      const timerElement = document.getElementById('booster-timer');
+      if (activeBooster && boosterEndTime) {
+        const remainingTime = Math.max(0, boosterEndTime - Date.now());
+        if (remainingTime > 0) {
+          const minutes = Math.floor(remainingTime / 60000);
+          const seconds = Math.floor((remainingTime % 60000) / 1000);
+          timerElement.textContent = `Booster ${activeBooster === 'bear' ? 'Baissier' : 'Haussier'} actif: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+          activeBooster = null;
+          boosterEndTime = null;
+          timerElement.textContent = '';
+        }
+      } else {
+        timerElement.textContent = '';
+      }
+    }
+
+    function renderLuxuryShop() {
+      const luxuryItemsContainer = document.getElementById('luxury-items');
+      luxuryItemsContainer.innerHTML = '';
+      luxuryItems.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'luxury-item';
+        itemElement.innerHTML = `
+          <img src="${item.img}" alt="${item.name}" width="200" height="150">
+          <h3>${item.name}</h3>
+          <p class="luxury-price">Prix: ${item.price.toLocaleString()} €</p>
+          <button onclick="buyLuxuryItem('${item.name}')">Acheter</button>
+        `;
+        luxuryItemsContainer.appendChild(itemElement);
+      });
+    }
+
+    function buyLuxuryItem(itemName) {
+      const item = luxuryItems.find(i => i.name === itemName);
+      if (item && cash >= item.price) {
+        cash -= item.price;
+        ownedLuxuryItems.push(item.name);
+        renderPortfolio();
+        saveGame();
+        alert(`Félicitations ! Vous avez acheté ${item.name} !`);
+      } else {
+        alert("Fonds insuffisants pour acheter cet article de luxe !");
+      }
+    }
+
+    function updateDailyBonusButton() {
+      const claimButton = document.getElementById('claim-bonus');
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      if (!lastDailyBonusDate || lastDailyBonusDate < today) {
+        claimButton.disabled = false;
+        claimButton.textContent = "Réclamer le don";
+      } else {
+        claimButton.disabled = true;
+        claimButton.textContent = "Don déjà réclamé aujourd'hui";
+      }
+    }
+
+    function claimDailyBonus() {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      if (!lastDailyBonusDate || lastDailyBonusDate < today) {
+        cash += 500;
+        lastDailyBonusDate = today;
+        renderPortfolio();
+        updateDailyBonusButton();
+        saveGame();
+        alert("Félicitations ! Vous avez reçu votre don journalier de 500 € !");
+      } else {
+        alert("Vous avez déjà réclamé votre don journalier aujourd'hui. Revenez demain !");
+      }
+    }
+
+    function buyRobotTrader() {
+      if (cash >= 1000) {
+        cash -= 1000;
+        robotTraderActive = true;
+        robotTraderEndTime = Date.now() + 60000; // 1 minute
+        renderPortfolio();
+        updateRobotTraderTimer();
+        saveGame();
+        alert("Robot Trader activé pour 1 minute!");
+        robotTraderTrade();
+      } else {
+        alert("Fonds insuffisants pour acheter le Robot Trader !");
+      }
+    }
+
+    function updateRobotTraderTimer() {
+      const timerElement = document.getElementById('robot-trader-timer');
+      if (robotTraderActive && robotTraderEndTime) {
+        const remainingTime = Math.max(0, robotTraderEndTime - Date.now());
+        if (remainingTime > 0) {
+          const seconds = Math.floor(remainingTime / 1000);
+          timerElement.textContent = `Robot Trader actif: ${seconds} secondes`;
+        } else {
+          robotTraderActive = false;
+          robotTraderEndTime = null;
+          timerElement.textContent = '';
+        }
+      } else {
+        timerElement.textContent = '';
+      }
+    }
+
+    function robotTraderTrade() {
+      if (robotTraderActive) {
+        const bestStock = stocks.reduce((best, current) => 
+          (current.change > best.change) ? current : best
+        );
+        
+        const investmentAmount = Math.min(cash, 1000);
+        const quantity = Math.floor(investmentAmount / bestStock.price);
+        
+        if (quantity > 0) {
+          buyStock(bestStock.name);
+          console.log(`Robot Trader a acheté ${quantity} actions de ${bestStock.name}`);
+        }
+        
+        setTimeout(robotTraderTrade, 5000);
+      }
+    }
+
+    function renderCompanies() {
+      const companyList = document.getElementById('company-list');
+      companyList.innerHTML = '';
+      companies.forEach(company => {
+        const companyCard = document.createElement('div');
+        companyCard.className = 'company-card';
+        companyCard.innerHTML = `
+          <div class="company-name">${company.name}</div>
+          <div class="company-price">Prix: ${company.price.toLocaleString()} €</div>
+          <div>Employés: ${company.employees}</div>
+          <div>Revenu par heure: ${company.revenue.toLocaleString()} €</div>
+          <button onclick="buyCompany('${company.name}')">Acheter l'entreprise</button>
+        `;
+        companyList.appendChild(companyCard);
+      });
+    }
+
+    function buyCompany(companyName) {
+      const company = companies.find(c => c.name === companyName);
+      if (company && cash >= company.price) {
+        cash -= company.price;
+        ownedCompanies.push({ ...company, lastRevenueDate: new Date() });
+        renderPortfolio();
+        renderOwnedCompanies();
+        saveGame();
+        alert(`Félicitations ! Vous avez acheté ${company.name} !`);
+      } else {
+        alert("Fonds insuffisants pour acheter cette entreprise !");
+      }
+    }
+
+    function renderOwnedCompanies() {
+      const ownedCompaniesList = document.getElementById('owned-companies');
+      ownedCompaniesList.innerHTML = '';
+      ownedCompanies.forEach(company => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <strong>${company.name}</strong>
+          <br>
+          Employés: ${company.employees}
+          <br>
+          Revenu par heure: ${company.revenue.toLocaleString()} €
+        `;
+        ownedCompaniesList.appendChild(li);
+      });
+    }
+
+    function updateCompanies() {
+      const now = new Date();
+      ownedCompanies.forEach(company => {
+        if (now - company.lastRevenueDate >= 3600000) { // 1 heure en millisecondes
+          cash += company.revenue;
+          company.lastRevenueDate = now;
+        }
+      });
+      renderPortfolio();
+      renderOwnedCompanies();
+    }
+
+    loadGame();
+    updateMarketMood();
+    renderStocks();
+    renderPortfolio();
+    renderLuxuryShop();
+    renderCompanies();
+    renderOwnedCompanies();
+    updateBoosterTimer();
+    updateRobotTraderTimer();
+    updateDailyBonusButton();
+    setInterval(updateStockPrices, 5000);
+    setInterval(updateBoosterTimer, 1000);
+    setInterval(updateRobotTraderTimer, 1000);
+    setInterval(updateCompanies, 60000); // Vérifie les revenus des entreprises toutes les minutes
+  </script>
+</body>
+</html>
